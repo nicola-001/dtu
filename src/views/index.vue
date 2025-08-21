@@ -5,33 +5,33 @@
       <el-form :model="queryParams" ref="queryRef" :inline="true" label-width="80px">
         <el-form-item label="设备名称" prop="deviceName">
           <el-input
-            v-model="queryParams.deviceName"
-            placeholder="请输入设备名称"
-            clearable
-            style="width: 200px"
-            @keyup.enter="handleQuery"
+              v-model="queryParams.deviceName"
+              placeholder="请输入设备名称"
+              clearable
+              style="width: 200px"
+              @keyup.enter="handleQuery"
           />
         </el-form-item>
         <el-form-item label="设备类型" prop="deviceType">
           <el-select
-            v-model="queryParams.deviceType"
-            placeholder="请选择设备类型"
-            clearable
-            style="width: 150px"
+              v-model="queryParams.deviceType"
+              placeholder="请选择设备类型"
+              clearable
+              style="width: 150px"
           >
-            <el-option label="水表" value="water_meter" />
-            <el-option label="水压表" value="pressure_meter" />
+            <el-option label="水表" value="water_meter"/>
+            <el-option label="水压表" value="pressure_meter"/>
           </el-select>
         </el-form-item>
         <el-form-item label="在线状态" prop="onlineStatus">
           <el-select
-            v-model="queryParams.onlineStatus"
-            placeholder="请选择状态"
-            clearable
-            style="width: 120px"
+              v-model="queryParams.onlineStatus"
+              placeholder="请选择状态"
+              clearable
+              style="width: 120px"
           >
-            <el-option label="在线" value="online" />
-            <el-option label="离线" value="offline" />
+            <el-option label="在线" value="online"/>
+            <el-option label="离线" value="offline"/>
           </el-select>
         </el-form-item>
         <el-form-item>
@@ -46,22 +46,22 @@
     <div class="device-cards">
       <el-row :gutter="20">
         <el-col
-          :xs="24"
-          :sm="12"
-          :md="8"
-          :lg="6"
-          :xl="4"
-          v-for="device in deviceList"
-          :key="device.id"
-          class="card-item"
+            :xs="24"
+            :sm="12"
+            :md="8"
+            :lg="6"
+            :xl="4"
+            v-for="device in deviceList"
+            :key="device.id"
+            class="card-item"
         >
           <el-card class="device-card" shadow="hover" @click="handleDeviceClick(device)">
             <template #header>
               <div class="card-header">
                 <span class="device-name">{{ device.deviceName }}</span>
                 <el-tag
-                  :type="device.onlineStatus === 'online' ? 'success' : 'danger'"
-                  size="small"
+                    :type="device.onlineStatus === 'online' ? 'success' : 'danger'"
+                    size="small"
                 >
                   {{ device.onlineStatus === 'online' ? '在线' : '离线' }}
                 </el-tag>
@@ -72,7 +72,7 @@
               <!-- 设备图标 -->
               <div class="device-icon">
                 <el-icon :size="40" :color="getDeviceIconColor(device.deviceType, device.onlineStatus)">
-                  <component :is="getDeviceIcon(device.deviceType)" />
+                  <component :is="getDeviceIcon(device.deviceType)"/>
                 </el-icon>
               </div>
 
@@ -122,25 +122,25 @@
       </el-row>
 
       <!-- 空状态 -->
-      <el-empty v-if="!deviceList.length" description="暂无设备数据" />
+      <el-empty v-if="!deviceList.length" description="暂无设备数据"/>
     </div>
 
     <!-- 分页 -->
     <pagination
-      v-show="total > 0"
-      :total="total"
-      v-model:page="queryParams.pageNum"
-      v-model:limit="queryParams.pageSize"
-      @pagination="getList"
+        v-show="total > 0"
+        :total="total"
+        v-model:page="queryParams.pageNum"
+        v-model:limit="queryParams.pageSize"
+        @pagination="getList"
     />
 
     <!-- 水表详情对话框 -->
     <el-dialog
-      v-model="waterMeterDetailOpen"
-      :title="waterMeterDetailForm.deviceName"
-      width="1200px"
-      append-to-body
-      class="water-meter-dialog"
+        v-model="waterMeterDetailOpen"
+        :title="waterMeterDetailForm.deviceName"
+        width="1200px"
+        append-to-body
+        class="water-meter-dialog"
     >
       <!-- 顶部状态卡片 -->
       <el-row :gutter="20" class="status-cards">
@@ -149,12 +149,13 @@
             <div class="status-content">
               <div class="status-icon">
                 <el-icon :size="32" :color="waterMeterDetailForm.onlineStatus === 'online' ? '#67C23A' : '#F56C6C'">
-                  <component :is="waterMeterDetailForm.onlineStatus === 'online' ? 'Connection' : 'Close'" />
+                  <component :is="waterMeterDetailForm.onlineStatus === 'online' ? 'Connection' : 'Close'"/>
                 </el-icon>
               </div>
               <div class="status-info">
                 <div class="status-title">连接状态</div>
-                <div class="status-value" :class="waterMeterDetailForm.onlineStatus === 'online' ? 'online' : 'offline'">
+                <div class="status-value"
+                     :class="waterMeterDetailForm.onlineStatus === 'online' ? 'online' : 'offline'">
                   {{ waterMeterDetailForm.onlineStatus === 'online' ? '在线' : '离线' }}
                 </div>
               </div>
@@ -166,7 +167,7 @@
             <div class="status-content">
               <div class="status-icon">
                 <el-icon :size="32" color="#409EFF">
-                  <Monitor />
+                  <Monitor/>
                 </el-icon>
               </div>
               <div class="status-info">
@@ -181,7 +182,7 @@
             <div class="status-content">
               <div class="status-icon">
                 <el-icon :size="32" color="#E6A23C">
-                  <TrendCharts />
+                  <TrendCharts/>
                 </el-icon>
               </div>
               <div class="status-info">
@@ -235,7 +236,7 @@
                 </div>
               </div>
 
-              <el-divider />
+              <el-divider/>
 
               <div class="info-group">
                 <h4>通信参数</h4>
@@ -261,7 +262,7 @@
                 </div>
               </div>
 
-              <el-divider />
+              <el-divider/>
 
               <div class="info-group">
                 <h4>时间信息</h4>
@@ -275,7 +276,7 @@
                 </div>
               </div>
 
-              <el-divider />
+              <el-divider/>
 
               <div class="info-group">
                 <div class="info-item">
@@ -316,7 +317,10 @@
         <el-descriptions-item label="安装位置" :span="2">{{ viewForm.location }}</el-descriptions-item>
         <el-descriptions-item label="设备描述" :span="2">{{ viewForm.description || '暂无描述' }}</el-descriptions-item>
         <el-descriptions-item label="创建时间" :span="2">{{ formatTime(viewForm.createTime) }}</el-descriptions-item>
-        <el-descriptions-item label="最后更新" :span="2">{{ formatTime(viewForm.lastUpdateTime) }}</el-descriptions-item>
+        <el-descriptions-item label="最后更新" :span="2">{{
+            formatTime(viewForm.lastUpdateTime)
+          }}
+        </el-descriptions-item>
       </el-descriptions>
       <template #footer>
         <div class="dialog-footer">
@@ -332,100 +336,100 @@
         <el-row :gutter="20">
           <el-col :span="12">
             <el-form-item label="设备编号" prop="deviceCode">
-              <el-input v-model="form.deviceCode" placeholder="请输入设备编号" />
+              <el-input v-model="form.deviceCode" placeholder="请输入设备编号"/>
             </el-form-item>
           </el-col>
           <el-col :span="12">
             <el-form-item label="设备名称" prop="deviceName">
-              <el-input v-model="form.deviceName" placeholder="请输入设备名称" />
+              <el-input v-model="form.deviceName" placeholder="请输入设备名称"/>
             </el-form-item>
           </el-col>
           <el-col :span="12">
             <el-form-item label="设备类型" prop="deviceType">
               <el-select v-model="form.deviceType" placeholder="请选择设备类型" style="width: 100%">
-                <el-option label="水表" value="water_meter" />
-                <el-option label="水压表" value="pressure_meter" />
+                <el-option label="水表" value="water_meter"/>
+                <el-option label="水压表" value="pressure_meter"/>
               </el-select>
             </el-form-item>
           </el-col>
           <el-col :span="12">
             <el-form-item label="在线状态" prop="onlineStatus">
               <el-select v-model="form.onlineStatus" placeholder="请选择状态" style="width: 100%">
-                <el-option label="在线" value="online" />
-                <el-option label="离线" value="offline" />
+                <el-option label="在线" value="online"/>
+                <el-option label="离线" value="offline"/>
               </el-select>
             </el-form-item>
           </el-col>
           <el-col :span="12">
             <el-form-item label="用水量" prop="waterUsage">
               <el-input-number
-                v-model="form.waterUsage"
-                :min="0"
-                :precision="2"
-                placeholder="请输入用水量"
-                style="width: 100%"
+                  v-model="form.waterUsage"
+                  :min="0"
+                  :precision="2"
+                  placeholder="请输入用水量"
+                  style="width: 100%"
               />
             </el-form-item>
           </el-col>
           <el-col :span="12">
             <el-form-item label="波特率" prop="baudRate">
               <el-select v-model="form.baudRate" placeholder="请选择波特率" style="width: 100%">
-                <el-option label="9600" value="9600" />
-                <el-option label="19200" value="19200" />
-                <el-option label="38400" value="38400" />
-                <el-option label="57600" value="57600" />
-                <el-option label="115200" value="115200" />
+                <el-option label="9600" value="9600"/>
+                <el-option label="19200" value="19200"/>
+                <el-option label="38400" value="38400"/>
+                <el-option label="57600" value="57600"/>
+                <el-option label="115200" value="115200"/>
               </el-select>
             </el-form-item>
           </el-col>
           <el-col :span="12">
             <el-form-item label="数据位" prop="dataBits">
               <el-select v-model="form.dataBits" placeholder="请选择数据位" style="width: 100%">
-                <el-option label="7" value="7" />
-                <el-option label="8" value="8" />
+                <el-option label="7" value="7"/>
+                <el-option label="8" value="8"/>
               </el-select>
             </el-form-item>
           </el-col>
           <el-col :span="12">
             <el-form-item label="停止位" prop="stopBits">
               <el-select v-model="form.stopBits" placeholder="请选择停止位" style="width: 100%">
-                <el-option label="1" value="1" />
-                <el-option label="1.5" value="1.5" />
-                <el-option label="2" value="2" />
+                <el-option label="1" value="1"/>
+                <el-option label="1.5" value="1.5"/>
+                <el-option label="2" value="2"/>
               </el-select>
             </el-form-item>
           </el-col>
           <el-col :span="12">
             <el-form-item label="校验位" prop="parity">
               <el-select v-model="form.parity" placeholder="请选择校验位" style="width: 100%">
-                <el-option label="无校验" value="none" />
-                <el-option label="奇校验" value="odd" />
-                <el-option label="偶校验" value="even" />
+                <el-option label="无校验" value="none"/>
+                <el-option label="奇校验" value="odd"/>
+                <el-option label="偶校验" value="even"/>
               </el-select>
             </el-form-item>
           </el-col>
           <el-col :span="12">
             <el-form-item label="协议类型" prop="protocolType">
               <el-select v-model="form.protocolType" placeholder="请选择协议类型" style="width: 100%">
-                <el-option label="Modbus RTU" value="modbus_rtu" />
-                <el-option label="Modbus TCP" value="modbus_tcp" />
-                <el-option label="DL/T 645" value="dlt645" />
-                <el-option label="自定义协议" value="custom" />
+                <el-option label="Modbus RTU" value="modbus_rtu"/>
+                <el-option label="Modbus TCP" value="modbus_tcp"/>
+                <el-option label="DL/T 645" value="dlt645"/>
+                <el-option label="自定义协议" value="custom"/>
               </el-select>
             </el-form-item>
           </el-col>
           <el-col :span="24">
             <el-form-item label="安装位置" prop="location">
-              <el-input v-model="form.location" placeholder="请输入安装位置" />
+              <el-input v-model="form.location" placeholder="请输入安装位置"/>
             </el-form-item>
           </el-col>
           <el-col :span="24">
             <el-form-item label="设备描述" prop="description">
               <el-input
-                v-model="form.description"
-                type="textarea"
-                placeholder="请输入设备描述"
-                :rows="3"
+                  v-model="form.description"
+                  type="textarea"
+                  placeholder="请输入设备描述"
+                  :rows="3"
               />
             </el-form-item>
           </el-col>
@@ -442,22 +446,15 @@
 </template>
 
 <script setup name="Index">
-import { ref, reactive, onMounted, nextTick } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import {ref, reactive, onMounted, nextTick} from 'vue'
+import {ElMessage, ElMessageBox} from 'element-plus'
 import {
   Monitor,
   OfficeBuilding,
-  Search,
-  Refresh,
-  Plus,
-  View,
-  Edit,
-  Delete,
-  Connection,
-  Close,
   TrendCharts
 } from '@element-plus/icons-vue'
 import * as echarts from 'echarts'
+import {getDeviceList} from "@/api/device/device.js";
 
 // 响应式数据
 const deviceList = ref([])
@@ -480,7 +477,7 @@ const queryParams = reactive({
 })
 
 // 表单数据
-const form = reactive({
+let form = reactive({
   id: null,
   deviceName: '',
   deviceType: '',
@@ -539,36 +536,52 @@ const waterMeterDetailForm = reactive({
 // 表单验证规则
 const rules = reactive({
   deviceName: [
-    { required: true, message: '设备名称不能为空', trigger: 'blur' }
+    {required: true, message: '设备名称不能为空', trigger: 'blur'}
   ],
   deviceType: [
-    { required: true, message: '设备类型不能为空', trigger: 'change' }
+    {required: true, message: '设备类型不能为空', trigger: 'change'}
   ],
   deviceCode: [
-    { required: true, message: '设备编号不能为空', trigger: 'blur' }
+    {required: true, message: '设备编号不能为空', trigger: 'blur'}
   ],
   location: [
-    { required: true, message: '安装位置不能为空', trigger: 'blur' }
+    {required: true, message: '安装位置不能为空', trigger: 'blur'}
   ],
   onlineStatus: [
-    { required: true, message: '在线状态不能为空', trigger: 'change' }
+    {required: true, message: '在线状态不能为空', trigger: 'change'}
   ],
   baudRate: [
-    { required: true, message: '波特率不能为空', trigger: 'change' }
+    {required: true, message: '波特率不能为空', trigger: 'change'}
   ],
   dataBits: [
-    { required: true, message: '数据位不能为空', trigger: 'change' }
+    {required: true, message: '数据位不能为空', trigger: 'change'}
   ],
   stopBits: [
-    { required: true, message: '停止位不能为空', trigger: 'change' }
+    {required: true, message: '停止位不能为空', trigger: 'change'}
   ],
   parity: [
-    { required: true, message: '校验位不能为空', trigger: 'change' }
+    {required: true, message: '校验位不能为空', trigger: 'change'}
   ],
   protocolType: [
-    { required: true, message: '协议类型不能为空', trigger: 'change' }
+    {required: true, message: '协议类型不能为空', trigger: 'change'}
   ]
 })
+
+
+//获取表单数据
+
+const getAllDeviceList = async () => {
+  const res = await getDeviceList();
+  form = [...res.data]
+  console.log(form)
+
+}
+// 组件挂载时获取数据
+onMounted(() => {
+  getList()
+  getAllDeviceList();
+})
+
 
 // 模拟数据
 const mockDeviceData = [
@@ -700,22 +713,22 @@ const getList = () => {
 
   // 模拟API调用
   setTimeout(() => {
-    let filteredData = [...mockDeviceData]
+    let filteredData = [...form]
 
     // 应用筛选条件
     if (queryParams.deviceName) {
       filteredData = filteredData.filter(item =>
-        item.deviceName.includes(queryParams.deviceName)
+          item.deviceName.includes(queryParams.deviceName)
       )
     }
     if (queryParams.deviceType) {
       filteredData = filteredData.filter(item =>
-        item.deviceType === queryParams.deviceType
+          item.deviceType === queryParams.deviceType
       )
     }
     if (queryParams.onlineStatus) {
       filteredData = filteredData.filter(item =>
-        item.onlineStatus === queryParams.onlineStatus
+          item.onlineStatus === queryParams.onlineStatus
       )
     }
 
@@ -832,7 +845,6 @@ const handleDeviceClick = (device) => {
     }
   }
 }
-
 
 
 // 重置表单
@@ -973,7 +985,7 @@ const initWaterUsageChart = () => {
   for (let i = 6; i >= 0; i--) {
     const date = new Date(today)
     date.setDate(date.getDate() - i)
-    dates.push(date.toLocaleDateString('zh-CN', { month: '2-digit', day: '2-digit' }))
+    dates.push(date.toLocaleDateString('zh-CN', {month: '2-digit', day: '2-digit'}))
 
     // 生成模拟用水量数据（基于设备当前用水量的变化）
     const baseUsage = waterMeterDetailForm.todayWaterAmount || 1000
@@ -992,7 +1004,7 @@ const initWaterUsageChart = () => {
     },
     tooltip: {
       trigger: 'axis',
-      formatter: function(params) {
+      formatter: function (params) {
         return `${params[0].name}<br/>用水量: ${params[0].value.toFixed(2)} L`
       }
     },
@@ -1066,10 +1078,7 @@ const initWaterUsageChart = () => {
   })
 }
 
-// 组件挂载时获取数据
-onMounted(() => {
-  getList()
-})
+
 </script>
 
 <style scoped lang="scss">
