@@ -12,26 +12,26 @@
               @keyup.enter="handleQuery"
           />
         </el-form-item>
-        <el-form-item label="设备类型" prop="deviceType">
+        <el-form-item label="设备类型" prop="type">
           <el-select
-              v-model="queryParams.deviceType"
+              v-model="queryParams.type"
               placeholder="请选择设备类型"
               clearable
               style="width: 150px"
           >
-            <el-option label="水表" value="water_meter"/>
-            <el-option label="水压表" value="pressure_meter"/>
+            <el-option label="水表" value="WATER"/>
+            <el-option label="水压表" value="PRESSURE"/>
           </el-select>
         </el-form-item>
-        <el-form-item label="在线状态" prop="onlineStatus">
+        <el-form-item label="在线状态" prop="status">
           <el-select
-              v-model="queryParams.onlineStatus"
+              v-model="queryParams.status"
               placeholder="请选择状态"
               clearable
               style="width: 120px"
           >
-            <el-option label="在线" value="online"/>
-            <el-option label="离线" value="offline"/>
+            <el-option label="在线" value="ONLINE"/>
+            <el-option label="离线" value="OFFLINE"/>
           </el-select>
         </el-form-item>
         <el-form-item>
@@ -60,10 +60,10 @@
               <div class="card-header">
                 <span class="device-name">{{ device.deviceName }}</span>
                 <el-tag
-                    :type="device.onlineStatus === 'online' ? 'success' : 'danger'"
+                    :type="device.status === 'ONLINE' ? 'success' : 'danger'"
                     size="small"
                 >
-                  {{ device.onlineStatus === 'online' ? '在线' : '离线' }}
+                  {{ device.status === 'ONLINE' ? '在线' : '离线' }}
                 </el-tag>
               </div>
             </template>
@@ -71,7 +71,7 @@
             <div class="device-info">
               <!-- 设备图标 -->
               <div class="device-icon">
-                <el-icon :size="40" :color="getDeviceIconColor(device.deviceType, device.onlineStatus)">
+                <el-icon :size="40" :color="getDeviceIconColor(device.deviceType, device.status)">
                   <component :is="getDeviceIcon(device.deviceType)"/>
                 </el-icon>
               </div>
@@ -92,15 +92,15 @@
                 </div>
                 <div class="info-item">
                   <span class="label">安装位置:</span>
-                  <span class="value">{{ device.location }}</span>
+                  <span class="value">{{ device.installationLocation }}</span>
                 </div>
-                <div class="info-item" v-if="device.deviceType === 'pressure_meter'">
-                  <span class="label">当日平均压力:</span>
+                <div class="info-item" v-if="device.deviceType === 'PRESSURE'">
+                  <span class="label">当前压力:</span>
                   <span class="value pressure-value">{{ device.currentPressure }} MPa</span>
                 </div>
                 <div class="info-item">
                   <span class="label">最后更新:</span>
-                  <span class="value">{{ formatTime(device.lastUpdateTime) }}</span>
+                  <span class="value">{{ device.updateTime }}</span>
                 </div>
               </div>
             </div>
@@ -129,9 +129,10 @@
     <pagination
         v-show="total > 0"
         :total="total"
-        v-model:page="queryParams.pageNum"
-        v-model:limit="queryParams.pageSize"
-        @pagination="getList"
+        v-model:page="queryParams.current"
+        v-model:limit="queryParams.size"
+        :page-sizes="[4, 8, 12, 16]"
+        @pagination="getAllDeviceList"
     />
 
     <!-- 水表详情对话框 -->
@@ -148,15 +149,15 @@
           <el-card class="status-card connection-status">
             <div class="status-content">
               <div class="status-icon">
-                <el-icon :size="32" :color="waterMeterDetailForm.onlineStatus === 'online' ? '#67C23A' : '#F56C6C'">
-                  <component :is="waterMeterDetailForm.onlineStatus === 'online' ? 'Connection' : 'Close'"/>
+                <el-icon :size="32" :color="waterMeterDetailForm.status === 'ONLINE' ? '#67C23A' : '#F56C6C'">
+                  <component :is="waterMeterDetailForm.status === 'ONLINE' ? 'Connection' : 'Close'"/>
                 </el-icon>
               </div>
               <div class="status-info">
                 <div class="status-title">连接状态</div>
                 <div class="status-value"
-                     :class="waterMeterDetailForm.onlineStatus === 'online' ? 'online' : 'offline'">
-                  {{ waterMeterDetailForm.onlineStatus === 'online' ? '在线' : '离线' }}
+                     :class="waterMeterDetailForm.status === 'ONLINE' ? 'ONLINE' : 'OFFLINE'">
+                  {{ waterMeterDetailForm.status === 'ONLINE' ? '在线' : '离线' }}
                 </div>
               </div>
             </div>
@@ -228,11 +229,11 @@
                 </div>
                 <div class="info-item">
                   <span class="label">安装位置:</span>
-                  <span class="value">{{ waterMeterDetailForm.location }}</span>
+                  <span class="value">{{ waterMeterDetailForm.installationLocation }}</span>
                 </div>
                 <div class="info-item">
                   <span class="label">累计用水量:</span>
-                  <span class="value">{{ waterMeterDetailForm.waterUsage || 0 }} L</span>
+                  <span class="value">{{ waterMeterDetailForm.cumulativeUsage || 0 }} L</span>
                 </div>
               </div>
 
@@ -258,7 +259,7 @@
                 </div>
                 <div class="info-item">
                   <span class="label">协议类型:</span>
-                  <span class="value">{{ getProtocolName(waterMeterDetailForm.protocolType) }}</span>
+                  <span class="value">{{ waterMeterDetailForm.protocolType }}</span>
                 </div>
               </div>
 
@@ -272,7 +273,7 @@
                 </div>
                 <div class="info-item">
                   <span class="label">最后更新:</span>
-                  <span class="value">{{ formatTime(waterMeterDetailForm.lastUpdateTime) }}</span>
+                  <span class="value">{{ formatTime(waterMeterDetailForm.updateTime) }}</span>
                 </div>
               </div>
 
@@ -281,7 +282,7 @@
               <div class="info-group">
                 <div class="info-item">
                   <span class="label">设备描述:</span>
-                  <span class="value">{{ waterMeterDetailForm.description || '暂无描述' }}</span>
+                  <span class="value">{{ waterMeterDetailForm.deviceDescription || '暂无描述' }}</span>
                 </div>
               </div>
             </div>
@@ -304,28 +305,33 @@
         <el-descriptions-item label="设备名称">{{ viewForm.deviceName }}</el-descriptions-item>
         <el-descriptions-item label="设备类型">{{ getDeviceTypeName(viewForm.deviceType) }}</el-descriptions-item>
         <el-descriptions-item label="在线状态">
-          <el-tag :type="viewForm.onlineStatus === 'online' ? 'success' : 'danger'">
-            {{ viewForm.onlineStatus === 'online' ? '在线' : '离线' }}
+          <el-tag :type="viewForm.status === 'ONLINE' ? 'success' : 'danger'">
+            {{ viewForm.status === 'ONLINE' ? '在线' : '离线' }}
           </el-tag>
         </el-descriptions-item>
-        <el-descriptions-item label="用水量">{{ viewForm.waterUsage || 0 }} L</el-descriptions-item>
+        <el-descriptions-item label="用水量">{{ viewForm.cumulativeUsage || 0 }} L</el-descriptions-item>
         <el-descriptions-item label="波特率">{{ viewForm.baudRate }}</el-descriptions-item>
         <el-descriptions-item label="数据位">{{ viewForm.dataBits }}</el-descriptions-item>
         <el-descriptions-item label="停止位">{{ viewForm.stopBits }}</el-descriptions-item>
         <el-descriptions-item label="校验位">{{ viewForm.parity }}</el-descriptions-item>
         <el-descriptions-item label="协议类型">{{ viewForm.protocolType }}</el-descriptions-item>
-        <el-descriptions-item label="安装位置" :span="2">{{ viewForm.location }}</el-descriptions-item>
-        <el-descriptions-item label="设备描述" :span="2">{{ viewForm.description || '暂无描述' }}</el-descriptions-item>
-        <el-descriptions-item label="创建时间" :span="2">{{ formatTime(viewForm.createTime) }}</el-descriptions-item>
+        <el-descriptions-item label="ip地址">{{ viewForm.ipAddress }}</el-descriptions-item>
+        <el-descriptions-item label="端口号">{{ viewForm.port }}</el-descriptions-item>
+        <el-descriptions-item label="SIM卡">{{ viewForm.simCardNumber }}</el-descriptions-item>
+        <el-descriptions-item label="安装位置" :span="2">{{ viewForm.installationLocation }}</el-descriptions-item>
+        <el-descriptions-item label="设备描述" :span="2">{{
+            viewForm.deviceDescription || '暂无描述'
+          }}
+        </el-descriptions-item>
+        <el-descriptions-item label="创建时间" :span="2">{{ viewForm.createTime }}</el-descriptions-item>
         <el-descriptions-item label="最后更新" :span="2">{{
-            formatTime(viewForm.lastUpdateTime)
+            viewForm.updateTime
           }}
         </el-descriptions-item>
       </el-descriptions>
       <template #footer>
         <div class="dialog-footer">
           <el-button @click="viewOpen = false">关 闭</el-button>
-          <el-button type="primary" @click="handleEditFromView">编 辑</el-button>
         </div>
       </template>
     </el-dialog>
@@ -347,23 +353,23 @@
           <el-col :span="12">
             <el-form-item label="设备类型" prop="deviceType">
               <el-select v-model="form.deviceType" placeholder="请选择设备类型" style="width: 100%">
-                <el-option label="水表" value="water_meter"/>
-                <el-option label="水压表" value="pressure_meter"/>
+                <el-option label="水表" value="WATER"/>
+                <el-option label="水压表" value="PRESSURE"/>
               </el-select>
             </el-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item label="在线状态" prop="onlineStatus">
-              <el-select v-model="form.onlineStatus" placeholder="请选择状态" style="width: 100%">
-                <el-option label="在线" value="online"/>
-                <el-option label="离线" value="offline"/>
+            <el-form-item label="在线状态" prop="status">
+              <el-select v-model="form.status" placeholder="请选择状态" style="width: 100%">
+                <el-option label="在线" value="ONLINE"/>
+                <el-option label="离线" value="OFFLINE"/>
               </el-select>
             </el-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item label="用水量" prop="waterUsage">
+            <el-form-item label="用水量" prop="cumulativeUsage">
               <el-input-number
-                  v-model="form.waterUsage"
+                  v-model="form.cumulativeUsage"
                   :min="0"
                   :precision="2"
                   placeholder="请输入用水量"
@@ -394,7 +400,6 @@
             <el-form-item label="停止位" prop="stopBits">
               <el-select v-model="form.stopBits" placeholder="请选择停止位" style="width: 100%">
                 <el-option label="1" value="1"/>
-                <el-option label="1.5" value="1.5"/>
                 <el-option label="2" value="2"/>
               </el-select>
             </el-form-item>
@@ -402,9 +407,8 @@
           <el-col :span="12">
             <el-form-item label="校验位" prop="parity">
               <el-select v-model="form.parity" placeholder="请选择校验位" style="width: 100%">
-                <el-option label="无校验" value="none"/>
-                <el-option label="奇校验" value="odd"/>
-                <el-option label="偶校验" value="even"/>
+                <el-option label="奇校验" value="O"/>
+                <el-option label="偶校验" value="E"/>
               </el-select>
             </el-form-item>
           </el-col>
@@ -418,15 +422,30 @@
               </el-select>
             </el-form-item>
           </el-col>
-          <el-col :span="24">
-            <el-form-item label="安装位置" prop="location">
-              <el-input v-model="form.location" placeholder="请输入安装位置"/>
+          <el-col :span="12">
+            <el-form-item label="ip地址" prop="ipAddress">
+              <el-input v-model="form.ipAddress" placeholder="请输入ip地址"/>
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="port" prop="port">
+              <el-input v-model="form.port" placeholder="请输入端口号"/>
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="SIM" prop="simCardNumber">
+              <el-input v-model="form.simCardNumber" placeholder="请输入SIM卡号"/>
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="安装位置" prop="installationLocation">
+              <el-input v-model="form.installationLocation" placeholder="请输入安装位置"/>
             </el-form-item>
           </el-col>
           <el-col :span="24">
-            <el-form-item label="设备描述" prop="description">
+            <el-form-item label="设备描述" prop="deviceDescription">
               <el-input
-                  v-model="form.description"
+                  v-model="form.deviceDescription"
                   type="textarea"
                   placeholder="请输入设备描述"
                   :rows="3"
@@ -454,7 +473,7 @@ import {
   TrendCharts
 } from '@element-plus/icons-vue'
 import * as echarts from 'echarts'
-import {getDeviceList} from "@/api/device/device.js";
+import {addDevice, deleteDevice, getDeviceList, updateDevice} from "@/api/device/device.js";
 
 // 响应式数据
 const deviceList = ref([])
@@ -469,28 +488,31 @@ let chartInstance = null
 
 // 查询参数
 const queryParams = reactive({
-  pageNum: 1,
-  pageSize: 12,
+  current: 1,
+  size: 4,
   deviceName: '',
-  deviceType: '',
-  onlineStatus: ''
+  type: '',
+  status: ''
 })
 
 // 表单数据
 let form = reactive({
   id: null,
-  deviceName: '',
-  deviceType: '',
   deviceCode: '',
-  location: '',
-  description: '',
-  onlineStatus: 'offline',
-  waterUsage: 0,
-  baudRate: '9600',
-  dataBits: '8',
-  stopBits: '1',
-  parity: 'none',
-  protocolType: 'modbus_rtu'
+  deviceName: '',
+  status: '',
+  installationLocation: '',
+  protocolType: '',
+  deviceDescription: '',
+  baudRate: '',
+  dataBits: '',
+  stopBits: '',
+  parity: '',
+  deviceType: '',
+  cumulativeUsage: 0,
+  ipAddress: '',
+  port: '',
+  simCardNumber: ''
 })
 
 // 查看详情数据
@@ -499,17 +521,20 @@ const viewForm = reactive({
   deviceName: '',
   deviceType: '',
   deviceCode: '',
-  location: '',
-  description: '',
-  onlineStatus: 'offline',
-  waterUsage: 0,
-  baudRate: '9600',
-  dataBits: '8',
-  stopBits: '1',
-  parity: 'none',
-  protocolType: 'modbus_rtu',
+  installationLocation: '',
+  deviceDescription: '',
+  status: '',
+  cumulativeUsage: 0,
+  baudRate: '',
+  dataBits: '',
+  stopBits: '',
+  parity: '',
+  ipAddress: '',
+  port: '',
+  simCardNumber: '',
+  protocolType: '',
   createTime: null,
-  lastUpdateTime: null
+  updateTime: null
 })
 
 // 水表详情数据
@@ -518,19 +543,22 @@ const waterMeterDetailForm = reactive({
   deviceName: '',
   deviceType: '',
   deviceCode: '',
-  location: '',
-  description: '',
-  onlineStatus: 'offline',
-  waterUsage: 0,
+  installationLocation: '',
+  deviceDescription: '',
+  status: 'OFFLINE',
+  cumulativeUsage: 0,
   todayWaterAmount: 0,
   monthlyWaterAmount: 0,
   baudRate: '9600',
   dataBits: '8',
   stopBits: '1',
-  parity: 'none',
+  parity: '',
   protocolType: 'modbus_rtu',
+  ipAddress: '',
+  port: '8888',
+  simCardNumber: '111-111',
   createTime: null,
-  lastUpdateTime: null
+  updateTime: null
 })
 
 // 表单验证规则
@@ -544,10 +572,10 @@ const rules = reactive({
   deviceCode: [
     {required: true, message: '设备编号不能为空', trigger: 'blur'}
   ],
-  location: [
+  installationLocation: [
     {required: true, message: '安装位置不能为空', trigger: 'blur'}
   ],
-  onlineStatus: [
+  status: [
     {required: true, message: '在线状态不能为空', trigger: 'change'}
   ],
   baudRate: [
@@ -562,6 +590,9 @@ const rules = reactive({
   parity: [
     {required: true, message: '校验位不能为空', trigger: 'change'}
   ],
+  deviceDescription: [
+    {required: true, message: '设备描述不能为空', trigger: 'blur'}
+  ],
   protocolType: [
     {required: true, message: '协议类型不能为空', trigger: 'change'}
   ]
@@ -571,191 +602,100 @@ const rules = reactive({
 //获取表单数据
 
 const getAllDeviceList = async () => {
-  const res = await getDeviceList();
-  form = [...res.data]
-  console.log(form)
-
-}
-// 组件挂载时获取数据
-onMounted(() => {
-  getList()
-  getAllDeviceList();
-})
-
-
-// 模拟数据
-const mockDeviceData = [
-  {
-    id: 1,
-    deviceName: '1号楼水表',
-    deviceType: 'water_meter',
-    deviceCode: 'WM001',
-    location: '1号楼地下室',
-    todayWaterAmount: 1250.5,
-    monthlyWaterAmount: 35680.2,
-    currentPressure: null,
-    onlineStatus: 'online',
-    lastUpdateTime: new Date(),
-    description: '1号楼主水表',
-    waterUsage: 1250.5,
-    baudRate: '9600',
-    dataBits: '8',
-    stopBits: '1',
-    parity: 'none',
-    protocolType: 'modbus_rtu',
-    createTime: new Date(Date.now() - 86400000 * 30)
-  },
-  {
-    id: 2,
-    deviceName: '2号楼水压表',
-    deviceType: 'pressure_meter',
-    deviceCode: 'PM001',
-    location: '2号楼顶层',
-    todayWaterAmount: 0,
-    monthlyWaterAmount: 0,
-    currentPressure: 0.45,
-    onlineStatus: 'online',
-    lastUpdateTime: new Date(Date.now() - 300000),
-    description: '2号楼水压监测',
-    waterUsage: 0,
-    baudRate: '19200',
-    dataBits: '8',
-    stopBits: '1',
-    parity: 'even',
-    protocolType: 'modbus_tcp',
-    createTime: new Date(Date.now() - 86400000 * 25)
-  },
-  {
-    id: 3,
-    deviceName: '3号楼水表',
-    deviceType: 'water_meter',
-    deviceCode: 'WM002',
-    location: '3号楼地下室',
-    todayWaterAmount: 890.2,
-    monthlyWaterAmount: 28450.8,
-    currentPressure: null,
-    onlineStatus: 'offline',
-    lastUpdateTime: new Date(Date.now() - 3600000),
-    description: '3号楼主水表',
-    waterUsage: 890.2,
-    baudRate: '9600',
-    dataBits: '8',
-    stopBits: '1',
-    parity: 'none',
-    protocolType: 'dlt645',
-    createTime: new Date(Date.now() - 86400000 * 20)
-  },
-  {
-    id: 4,
-    deviceName: '4号楼水压表',
-    deviceType: 'pressure_meter',
-    deviceCode: 'PM002',
-    location: '4号楼中层',
-    todayWaterAmount: 0,
-    monthlyWaterAmount: 0,
-    currentPressure: 0.38,
-    onlineStatus: 'online',
-    lastUpdateTime: new Date(Date.now() - 120000),
-    description: '4号楼水压监测',
-    waterUsage: 0,
-    baudRate: '38400',
-    dataBits: '8',
-    stopBits: '1',
-    parity: 'odd',
-    protocolType: 'modbus_rtu',
-    createTime: new Date(Date.now() - 86400000 * 15)
-  },
-  {
-    id: 5,
-    deviceName: '5号楼水表',
-    deviceType: 'water_meter',
-    deviceCode: 'WM003',
-    location: '5号楼地下室',
-    todayWaterAmount: 2100.8,
-    monthlyWaterAmount: 52340.5,
-    currentPressure: null,
-    onlineStatus: 'online',
-    lastUpdateTime: new Date(Date.now() - 60000),
-    description: '5号楼主水表',
-    waterUsage: 2100.8,
-    baudRate: '115200',
-    dataBits: '8',
-    stopBits: '1',
-    parity: 'none',
-    protocolType: 'custom',
-    createTime: new Date(Date.now() - 86400000 * 10)
-  },
-  {
-    id: 6,
-    deviceName: '6号楼水表',
-    deviceType: 'water_meter',
-    deviceCode: 'WM004',
-    location: '6号楼地下室',
-    todayWaterAmount: 1567.3,
-    monthlyWaterAmount: 41230.7,
-    currentPressure: null,
-    onlineStatus: 'offline',
-    lastUpdateTime: new Date(Date.now() - 7200000),
-    description: '6号楼主水表',
-    waterUsage: 1567.3,
-    baudRate: '57600',
-    dataBits: '7',
-    stopBits: '2',
-    parity: 'even',
-    protocolType: 'modbus_rtu',
-    createTime: new Date(Date.now() - 86400000 * 5)
-  }
-]
-
-// 获取设备列表
-const getList = () => {
   loading.value = true
 
-  // 模拟API调用
-  setTimeout(() => {
-    let filteredData = [...form]
-
-    // 应用筛选条件
+  try {
+    // 调用后端API获取数据
+    const res = await getDeviceList(queryParams)
+    let filteredData = res.data.records || []
+    total.value = res.data.total
+    // 数据预处理 - 添加前端需要的字段
+    filteredData = filteredData.map(item => ({
+      ...item,
+      // 为水表添加今日用水量和月用水量（如果后端没有提供）
+      todayWaterAmount: item.deviceType === 'WATER' ? parseFloat(item.cumulativeUsage || 0) * 0.1 : 0,
+      monthlyWaterAmount: item.deviceType === 'WATER' ? parseFloat(item.cumulativeUsage || 0) : 0,
+      // 为水压表添加当前压力值（如果后端没有提供）
+      currentPressure: item.deviceType === 'PRESSURE' ? (Math.random() * 0.5 + 0.2).toFixed(2) : null,
+    }))
+    // 应用筛选条件--模糊搜索
     if (queryParams.deviceName) {
       filteredData = filteredData.filter(item =>
           item.deviceName.includes(queryParams.deviceName)
       )
     }
-    if (queryParams.deviceType) {
-      filteredData = filteredData.filter(item =>
-          item.deviceType === queryParams.deviceType
-      )
-    }
-    if (queryParams.onlineStatus) {
-      filteredData = filteredData.filter(item =>
-          item.onlineStatus === queryParams.onlineStatus
-      )
-    }
 
     // 分页处理
-    const start = (queryParams.pageNum - 1) * queryParams.pageSize
-    const end = start + queryParams.pageSize
+    // const start = (queryParams.pageNum - 1) * queryParams.size
+    // const end = start + queryParams.size
+    //
+    // deviceList.value = filteredData.slice(start, end)
 
-    deviceList.value = filteredData.slice(start, end)
-    total.value = filteredData.length
+    // 直接将数据赋给deviceList
+    deviceList.value = filteredData;
+
+  } finally {
     loading.value = false
-  }, 500)
+  }
 }
+// 组件挂载时获取数据
+onMounted(() => {
+  // getList()
+  getAllDeviceList();
+})
+
+
+// 模拟数据（基于后端数据格式）
+const mockDeviceData = [
+  {
+    id: 1,
+    deviceName: '1号楼水压',
+    deviceType: 'PRESSURE',
+    deviceCode: 'P001',
+    installationLocation: '1号楼天台',
+    todayWaterAmount: 0,
+    monthlyWaterAmount: 0,
+    currentPressure: 0.45,
+    status: 'ONLINE',
+    updatedAt: new Date(),
+    deviceDescription: '1号楼顶层水压监测',
+    cumulativeUsage: '0.00',
+    baudRate: '4800',
+    dataBits: '7',
+    stopBits: '2',
+    parity: 'E',
+    protocolType: 'DLT645',
+    createTime: new Date(Date.now() - 86400000 * 30)
+  },
+]
+
 
 // 搜索
 const handleQuery = () => {
   queryParams.pageNum = 1
-  getList()
+  getAllDeviceList();
 }
 
 // 重置搜索
 const resetQuery = () => {
+  // 重置查询参数
   queryParams.deviceName = ''
-  queryParams.deviceType = ''
-  queryParams.onlineStatus = ''
+  queryParams.type = ''
+  queryParams.status = ''
   queryParams.pageNum = 1
-  getList()
+  //重新发送请求
+  getAllDeviceList(queryParams)
 }
+
+// 编辑设备
+const handleEdit = (row) => {
+  reset()
+  // 直接使用传入的行数据
+  Object.assign(form, row)
+  editOpen.value = true
+  title.value = '修改设备'
+}
+
 
 // 添加设备
 const handleAdd = () => {
@@ -764,37 +704,15 @@ const handleAdd = () => {
   title.value = '添加设备'
 }
 
-// 编辑设备
-const handleEdit = (row) => {
-  reset()
-  const deviceId = row.id
-  // 模拟获取设备详情
-  const device = mockDeviceData.find(item => item.id === deviceId)
-  if (device) {
-    Object.assign(form, device)
-  }
-  editOpen.value = true
-  title.value = '修改设备'
-}
 
 // 查看设备详情
 const handleView = (row) => {
-  const deviceId = row.id
-  // 模拟获取设备详情
-  const device = mockDeviceData.find(item => item.id === deviceId)
-  if (device) {
-    Object.assign(viewForm, device)
-  }
+  console.log('查看设备详情', row)
+  // 直接使用传入的行数据
+  Object.assign(viewForm, row)
   viewOpen.value = true
 }
 
-// 从查看详情跳转到编辑
-const handleEditFromView = () => {
-  Object.assign(form, viewForm)
-  viewOpen.value = false
-  editOpen.value = true
-  title.value = '修改设备'
-}
 
 // 从水表详情跳转到编辑
 const handleEditFromWaterMeterDetail = () => {
@@ -810,13 +728,17 @@ const handleDelete = (row) => {
     confirmButtonText: '确定',
     cancelButtonText: '取消',
     type: 'warning'
-  }).then(() => {
-    // 模拟删除操作
-    const index = mockDeviceData.findIndex(item => item.id === row.id)
-    if (index > -1) {
-      mockDeviceData.splice(index, 1)
-      getList()
+  }).then(async () => {
+    try {
+      // 调用后端删除API
+      deleteDevice(row.deviceCode);
+
+      // 重新获取列表
+      await getAllDeviceList()
       ElMessage.success('删除成功')
+    } catch (error) {
+      console.error('删除设备失败:', error)
+      ElMessage.error('删除失败，请稍后重试')
     }
   }).catch(() => {
     ElMessage.info('已取消删除')
@@ -825,24 +747,18 @@ const handleDelete = (row) => {
 
 // 设备卡片点击
 const handleDeviceClick = (device) => {
-  if (device.deviceType === 'water_meter') {
+  if (device.deviceType === 'WATER') {
     // 水表点击打开专门的水表详情对话框
-    const deviceData = mockDeviceData.find(item => item.id === device.id)
-    if (deviceData) {
-      Object.assign(waterMeterDetailForm, deviceData)
-      waterMeterDetailOpen.value = true
-      // 等待对话框打开后初始化图表
-      nextTick(() => {
-        initWaterUsageChart()
-      })
-    }
+    Object.assign(waterMeterDetailForm, device)
+    waterMeterDetailOpen.value = true
+    // 等待对话框打开后初始化图表
+    nextTick(() => {
+      initWaterUsageChart()
+    })
   } else {
     // 其他设备类型打开通用详情对话框
-    const deviceData = mockDeviceData.find(item => item.id === device.id)
-    if (deviceData) {
-      Object.assign(viewForm, deviceData)
-      viewOpen.value = true
-    }
+    Object.assign(viewForm, device)
+    viewOpen.value = true
   }
 }
 
@@ -853,14 +769,14 @@ const reset = () => {
   form.deviceName = ''
   form.deviceType = ''
   form.deviceCode = ''
-  form.location = ''
-  form.description = ''
-  form.onlineStatus = 'offline'
-  form.waterUsage = 0
+  form.installationLocation = ''
+  form.deviceDescription = ''
+  form.status = 'OFFLINE'
+  form.cumulativeUsage = 0
   form.baudRate = '9600'
   form.dataBits = '8'
   form.stopBits = '1'
-  form.parity = 'none'
+  form.parity = ''
   form.protocolType = 'modbus_rtu'
 }
 
@@ -871,42 +787,50 @@ const cancel = () => {
 }
 
 // 提交表单
-const submitForm = () => {
-  // 这里应该调用API保存数据
-  if (form.id) {
-    // 编辑
-    const index = mockDeviceData.findIndex(item => item.id === form.id)
-    if (index > -1) {
-      Object.assign(mockDeviceData[index], {
-        ...form,
-        lastUpdateTime: new Date()
-      })
-      ElMessage.success('修改成功')
-    }
-  } else {
-    // 新增
-    const newDevice = {
-      ...form,
-      id: Date.now(),
-      todayWaterAmount: form.waterUsage || 0,
-      currentPressure: form.deviceType === 'pressure_meter' ? 0 : null,
-      lastUpdateTime: new Date(),
-      createTime: new Date()
-    }
-    mockDeviceData.push(newDevice)
-    ElMessage.success('新增成功')
-  }
+const submitForm = async (a, b) => {
+  console.log("a:", a, b)
+  try {
+    if (form.id) {
+      console.log("修改设备：", form.id)
+      // 编辑设备
+      const res = await updateDevice(form)
+      console.log("修改成功：", res)
 
-  editOpen.value = false
-  getList()
-  reset()
+      ElMessage.success('修改成功')
+    } else {
+      // 新增设备
+      const res = await addDevice(form)
+      console.log("新增成功：", res)
+
+      // // 暂时添加到本地数据
+      // const newDevice = {
+      //   ...form,
+      //   id: Date.now(),
+      //   todayWaterAmount: form.deviceType === 'WATER' ? parseFloat(form.cumulativeUsage || 0) * 0.1 : 0,
+      //   monthlyWaterAmount: form.deviceType === 'WATER' ? parseFloat(form.cumulativeUsage || 0) : 0,
+      //   currentPressure: form.deviceType === 'PRESSURE' ? (Math.random() * 0.5 + 0.2).toFixed(2) : null,
+      //   updatedAt: new Date(),
+      //   createTime: new Date()
+      // }
+      // deviceList.value.push(newDevice)
+      ElMessage.success('新增成功')
+    }
+
+    editOpen.value = false
+    // 重新获取列表
+    await getAllDeviceList()
+    reset()
+  } catch (error) {
+    console.error('保存设备失败:', error)
+    ElMessage.error('保存失败，请稍后重试')
+  }
 }
 
 // 获取设备类型名称
 const getDeviceTypeName = (type) => {
   const typeMap = {
-    'water_meter': '水表',
-    'pressure_meter': '水压表'
+    'WATER': '水表',
+    'PRESSURE': '水压表'
   }
   return typeMap[type] || '未知'
 }
@@ -914,19 +838,19 @@ const getDeviceTypeName = (type) => {
 // 获取设备图标
 const getDeviceIcon = (type) => {
   const iconMap = {
-    'water_meter': Monitor,
-    'pressure_meter': OfficeBuilding
+    'WATER': Monitor,
+    'PRESSURE': OfficeBuilding
   }
   return iconMap[type] || Monitor
 }
 
 // 获取设备图标颜色
 const getDeviceIconColor = (type, status) => {
-  if (status === 'offline') return '#909399'
+  if (status === 'OFFLINE') return '#909399'
 
   const colorMap = {
-    'water_meter': '#409EFF',
-    'pressure_meter': '#67C23A'
+    'WATER': '#409EFF',
+    'PRESSURE': '#67C23A'
   }
   return colorMap[type] || '#409EFF'
 }
@@ -948,9 +872,8 @@ const formatTime = (time) => {
 // 获取校验位名称
 const getParityName = (parity) => {
   const parityMap = {
-    'none': '无校验',
-    'odd': '奇校验',
-    'even': '偶校验'
+    'O': '奇校验',
+    'E': '偶校验'
   }
   return parityMap[parity] || '未知'
 }
@@ -958,10 +881,9 @@ const getParityName = (parity) => {
 // 获取协议类型名称
 const getProtocolName = (protocol) => {
   const protocolMap = {
-    'modbus_rtu': 'Modbus RTU',
-    'modbus_tcp': 'Modbus TCP',
-    'dlt645': 'DL/T 645',
-    'custom': '自定义协议'
+    'MODBUS': 'Modbus',
+    'DLT645': 'DL/T 645',
+    'CUSTOM': '自定义协议'
   }
   return protocolMap[protocol] || '未知'
 }
